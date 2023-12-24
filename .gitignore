@@ -1,4 +1,6 @@
 tetris_generic
+.gdb_history
+.vscode
 
 # Prerequisites
 *.d

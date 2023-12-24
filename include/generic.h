@@ -8,7 +8,7 @@
 
 extern uint32_t generic_screenbuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 
-void generic_init();
+int generic_init();
 void generic_draw_frame();
 void generic_sleepms(uint32_t ms);
 uint32_t generic_get_time();
