@@ -9,10 +9,14 @@ int main(int argc, char **argv) {
   printf("Initializing\n");
   generic_init();
 
+  key_map keys = 0;
   while(1){
     generic_draw_frame();
+    
+    generic_get_key(&keys);
+    printf("%x\n", keys);
 
-    generic_sleepms(30);
+    generic_sleepms(60);
   }
   return 0;
 }
