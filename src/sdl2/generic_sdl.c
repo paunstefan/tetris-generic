@@ -5,6 +5,8 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 #include <stdbool.h>
+#include <time.h>
+#include <stdlib.h>
 
 #define SDL_WIDTH 800
 #define SDL_HEIGHT 600
@@ -14,6 +16,9 @@ static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
 
 int generic_init() {
+
+  srand(time(NULL));
+
   window = SDL_CreateWindow("Tetris-generic", SDL_WINDOWPOS_UNDEFINED,
                             SDL_WINDOWPOS_UNDEFINED, SDL_WIDTH, SDL_HEIGHT,
                             SDL_WINDOW_SHOWN);
@@ -140,4 +145,8 @@ void generic_get_key(key_map *keys) {
     exit(0);
   }
 
+}
+
+int32_t generic_random(){
+  return rand();
 }
