@@ -2,6 +2,8 @@
 #define GAME_H
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "generic.h"
 
 #define FIELD_HEIGHT 20
 #define FIELD_WIDTH 10
@@ -22,4 +24,9 @@ typedef struct {
 
 extern piece_state current_piece;
 extern uint8_t tetrominos[7][16];
+extern uint8_t playfield[FIELD_HEIGHT][FIELD_WIDTH];
+
+void game_step(piece_state *const piece);
+bool check_move(const key_map *const keys, piece_state *const piece, bool *const latch);
+void check_rotate(const key_map *const keys, piece_state *const piece, bool *const latch);
 #endif

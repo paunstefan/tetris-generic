@@ -1,12 +1,14 @@
 #include "generic.h"
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 #include <stdbool.h>
-#include <time.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define SDL_WIDTH 800
 #define SDL_HEIGHT 600
@@ -14,6 +16,7 @@
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
+static uint8_t *sdl_keys = NULL;
 
 int generic_init() {
 
@@ -48,6 +51,8 @@ int generic_init() {
     return 1;
   }
 
+  sdl_keys = SDL_GetKeyboardState(NULL);
+
   return 0;
 }
 
@@ -65,88 +70,57 @@ void generic_sleepms(uint32_t ms) { SDL_Delay(ms); }
 uint32_t generic_get_time() { return SDL_GetTicks(); }
 
 void generic_get_key(key_map *keys) {
-  SDL_Event event;
   bool done = false;
-  if (SDL_PollEvent(&event)) {
-    switch (event.type) {
-    case SDL_QUIT:
-      done = true;
-      break;
-    case SDL_KEYDOWN:
-      switch (event.key.keysym.sym) {
-      case SDLK_LEFT:
-        SET_BIT(*keys, LEFT);
-        break;
 
-      case SDLK_RIGHT:
-        SET_BIT(*keys, RIGHT);
-        break;
+  SDL_PumpEvents();
 
-      case SDLK_UP:
-        SET_BIT(*keys, UP);
-        break;
+  if (sdl_keys[SDL_SCANCODE_LEFT]) {
+    SET_BIT(*keys, LEFT);
+  } else {
+    UNSET_BIT(*keys, LEFT);
+  }
 
-      case SDLK_DOWN:
-        SET_BIT(*keys, DOWN);
-        break;
+  if (sdl_keys[SDL_SCANCODE_RIGHT]) {
+    SET_BIT(*keys, RIGHT);
+  } else {
+    UNSET_BIT(*keys, RIGHT);
+  }
 
-      case SDLK_z:
-        SET_BIT(*keys, Z);
-        break;
+  if (sdl_keys[SDL_SCANCODE_UP]) {
+    SET_BIT(*keys, UP);
+  } else {
+    UNSET_BIT(*keys, UP);
+  }
 
-      case SDLK_x:
-        SET_BIT(*keys, X);
-        break;
+  if (sdl_keys[SDL_SCANCODE_DOWN]) {
+    SET_BIT(*keys, DOWN);
+  } else {
+    UNSET_BIT(*keys, DOWN);
+  }
 
-      default:
-        break;
-      }
-      break;
-    case SDL_KEYUP:
-      switch (event.key.keysym.sym) {
-      case SDLK_LEFT:
-        UNSET_BIT(*keys, LEFT);
-        break;
+  if (sdl_keys[SDL_SCANCODE_Z]) {
+    SET_BIT(*keys, Z);
+  } else {
+    UNSET_BIT(*keys, Z);
+  }
 
-      case SDLK_RIGHT:
-        UNSET_BIT(*keys, RIGHT);
-        break;
+  if (sdl_keys[SDL_SCANCODE_X]) {
+    SET_BIT(*keys, X);
+  } else {
+    UNSET_BIT(*keys, X);
+  }
 
-      case SDLK_UP:
-        UNSET_BIT(*keys, UP);
-        break;
-
-      case SDLK_DOWN:
-        UNSET_BIT(*keys, DOWN);
-        break;
-
-      case SDLK_z:
-        UNSET_BIT(*keys, Z);
-        break;
-
-      case SDLK_x:
-        UNSET_BIT(*keys, X);
-        break;
-
-      default:
-        break;
-      }
-      break;
-    default:
-      break;
-    }
+  if (sdl_keys[SDL_SCANCODE_Q]) {
+    done = true;
   }
 
   if (done) {
-	SDL_DestroyTexture(texture);
+    SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
     exit(0);
   }
-
 }
 
-int32_t generic_random(){
-  return rand();
-}
+int32_t generic_random() { return rand(); }

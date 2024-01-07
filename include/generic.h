@@ -12,7 +12,7 @@ extern uint32_t generic_screenbuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 
 #define SET_BIT(var, bit) (var |= (uint8_t)1 << (bit))
 #define UNSET_BIT(var, bit) (var &= ~((uint8_t)1 << (bit)))
-#define ISSET_BIT(var, bit) (((var) & (bit)) != 0)
+#define ISSET_BIT(var, bit) (((var) & (1 << (bit))) != 0)
 
 typedef enum {
     UP = 0,
