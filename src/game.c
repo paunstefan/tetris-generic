@@ -8,49 +8,50 @@
 
 uint8_t playfield[FIELD_HEIGHT][FIELD_WIDTH] = {0};
 
-piece_state current_piece = {3, 0, 0,0, 1};
+piece_state current_piece = {0};
+uint32_t total_lines = 0;
 
-uint8_t tetrominos[7][16] = {
-    {0,0,1,0,
-         0,0,1,0,
-         0,0,1,0,
-        0,0,1,0},
+tetromino tetrominos[7] = {
+    {{0,0,0,0,
+                1,1,1,1,
+                0,0,0,0,
+               0,0,0,0}, 4, 4}, // I
     
-    {0,0,0,0,
-         0,0,1,0,
-         0,0,1,0,
-        0,1,1,0},
+    {{0,1,0,
+                0,1,0,
+                1,1,0,
+        0,0,0, 0,0,0,0}, 3, 5}, // J
 
-    {0,0,0,0,
-         0,1,0,0,
-         0,1,0,0,
-        0,1,1,0},
+    {{1,0,0,
+                1,0,0,
+                1,1,0,
+        0,0,0,0,0,0,0}, 3, 3}, // L
     
-    {0,0,0,0,
-         0,0,0,0,
-         0,0,1,0,
-        0,1,1,1},
+    {{0,1,0,
+                1,1,1,
+                0,0,0,
+        0,0,0,0,0,0,0}, 3, 7}, // T
 
-    {0,0,0,0,
-         0,0,0,0,
-         0,1,1,0,
-        0,1,1,0},
+    {{1,1,
+                1,1,
+        0,0,0,0,0,
+        0,0,0,0,0,0,0}, 2, 6}, // O
     
-    {0,0,0,0,
-         0,0,0,0,
-         0,1,1,0,
-        0,0,1,1},
+    {{1,1,0,
+                0,1,1,
+                0,0,0,
+        0,0,0,0,0,0,0}, 3,1}, // Z
 
-    {0,0,0,0,
-         0,0,0,0,
-         0,0,1,1,
-        0,1,1,0},
+    {{0,1,1,
+                1,1,0,
+                0,0,0,
+        0,0,0,0,0,0,0}, 3, 2} // S
 };
 
 static bool check_collision(const piece_state *const piece, int8_t px, int8_t py, int8_t rot){
-    for (int8_t y = 0; y < 4; y++) {
-        for (int8_t x = 0; x < 4; x++) {
-            if (tetrominos[piece->piece][rotation_coords(x, y, rot)] == 1) {
+    for (int8_t y = 0; y < tetrominos[piece->piece_id].diameter; y++) {
+        for (int8_t x = 0; x < tetrominos[piece->piece_id].diameter; x++) {
+            if (tetrominos[piece->piece_id].data[rotation_coords(x, y, rot, tetrominos[piece->piece_id].diameter)] == 1) {
                 // Borders collision
                 if(x + px < 0 || x + px >= FIELD_WIDTH){
                     return false;
@@ -69,17 +70,17 @@ static bool check_collision(const piece_state *const piece, int8_t px, int8_t py
     return true;
 }
 
-static void new_piece(){
+void new_piece(){
     int8_t piece = generic_random() % 7;
 
-    current_piece.piece = piece;
+    current_piece.piece_id = piece;
     current_piece.rotation = 0;
-    current_piece.x = 0;
+    current_piece.x = FIELD_WIDTH / 2 - 2;
     current_piece.y = 0;
-    current_piece.color_id = 1;
 }
 
 static void check_full_line(const piece_state *const piece){
+    uint32_t lines = 0;
     for(int8_t py = piece->y + 3; py >= piece->y; py--){
         bool full = true;
         for(int8_t cols = 0; cols < FIELD_WIDTH; cols++){
@@ -92,16 +93,18 @@ static void check_full_line(const piece_state *const piece){
             for(int8_t y = py; y > 0; y--){
                 memcpy(playfield[y], playfield[y-1], FIELD_WIDTH);
             }
+            lines++;
             py++;
         }
     }
+    total_lines += lines;
 }
 
 static void lock_piece(piece_state *const piece){
-    for (int8_t y = 0; y < 4; y++) {
-        for (int8_t x = 0; x < 4; x++) {
-            if (tetrominos[piece->piece][rotation_coords(x, y, piece->rotation)] == 1) {
-                playfield[y + piece->y][x + piece->x] = piece->color_id; 
+    for (int8_t y = 0; y < tetrominos[piece->piece_id].diameter; y++) {
+        for (int8_t x = 0; x < tetrominos[piece->piece_id].diameter; x++) {
+            if (tetrominos[piece->piece_id].data[rotation_coords(x, y, piece->rotation, tetrominos[piece->piece_id].diameter)] == 1) {
+                playfield[y + piece->y][x + piece->x] = tetrominos[piece->piece_id].color_id; 
             }
         }
     }
@@ -132,8 +135,6 @@ bool check_move(const key_map *const keys, piece_state *const piece, bool *const
                 *latch = true;
                 ret = true;
             }
-        }else{
-            lock_piece(piece);
         }
     }
     else{
@@ -142,16 +143,24 @@ bool check_move(const key_map *const keys, piece_state *const piece, bool *const
     return ret;
 }
 
-void check_rotate(const key_map *const keys, piece_state *const piece, bool *const latch){
-    if(ISSET_BIT(*keys, Z)){
+void check_rotate_or_drop(const key_map *const keys, piece_state *const piece, bool *const latch){
+    if(ISSET_BIT(*keys, X)){
         if(check_collision(piece, piece->x, piece->y, (piece->rotation + 1) % 4)&& !(*latch)){
             piece->rotation = (piece->rotation + 1) % 4;
             *latch = true;
         }   
-    }else if(ISSET_BIT(*keys, X)){
+    }else if(ISSET_BIT(*keys, Z)){
         if(check_collision(piece, piece->x, piece->y, piece->rotation == 0 ? 3 : piece->rotation - 1)&& !(*latch)){
             piece->rotation = piece->rotation == 0 ? 3 : piece->rotation - 1;
             *latch = true;
+        }
+    }
+    else if(ISSET_BIT(*keys, UP)){
+        if(!(*latch)){
+            while(check_collision(piece, piece->x, piece->y + 1, piece->rotation)){
+                piece->y += 1;
+            }
+        *latch = true;
         }
     }
     else{

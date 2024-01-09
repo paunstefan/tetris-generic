@@ -4,7 +4,8 @@
 #include <assert.h>
 #include <stdint.h>
 
-static const uint32_t color_ids[4] = {BLACK, RED, GREEN, BLUE};
+static const uint32_t color_ids[] = {BLACK, RED,    GREEN,  BLUE,
+                                     AQUA,  ORANGE, YELLOW, PURPLE};
 
 static const uint32_t cell_diameter =
     (SCREEN_HEIGHT - BORDER_DIAMETER * 2) / FIELD_HEIGHT;
@@ -49,7 +50,7 @@ void init_game_screen() {
             BORDER_DIAMETER, SCREEN_HEIGHT, VLIGHT_GREY);
 }
 
-int8_t rotation_coords(int8_t x, int8_t y, int8_t rot) {
+int8_t rotation_coords(int8_t x, int8_t y, int8_t rot, uint8_t diam) {
   assert(rot >= 0);
   assert(rot <= 3);
 
@@ -58,31 +59,32 @@ int8_t rotation_coords(int8_t x, int8_t y, int8_t rot) {
   switch (rot) {
   // 0 degrees
   case 0:
-    index = y * 4 + x;
+    index = y * diam + x;
     break;
   // 90 degrees
   case 1:
-    index = 12 + y - (x * 4);
+    index = (diam * (diam - 1)) + y - (x * diam);
     break;
   // 180 degrees
   case 2:
-    index = 15 - (y * 4) - x;
+    index = (diam * diam - 1) - (y * diam) - x;
     break;
   // 270 degrees
   case 3:
-    index = 3 - y + (x * 4);
+    index = (diam - 1) - y + (x * diam);
     break;
   }
   return index;
 }
 
 void render_piece(const piece_state *const piece) {
-  for (int8_t y = 0; y < 4; y++) {
-    for (int8_t x = 0; x < 4; x++) {
-      if (tetrominos[piece->piece][rotation_coords(x, y, piece->rotation)] ==
+  for (int8_t y = 0; y < tetrominos[piece->piece_id].diameter; y++) {
+    for (int8_t x = 0; x < tetrominos[piece->piece_id].diameter; x++) {
+      if (tetrominos[piece->piece_id].data[rotation_coords(
+              x, y, piece->rotation, tetrominos[piece->piece_id].diameter)] ==
           1) {
         draw_cell(generic_screenbuffer, piece->x + x, piece->y + y,
-                  piece->color_id);
+                  tetrominos[piece->piece_id].color_id);
       }
     }
   }
@@ -91,7 +93,7 @@ void render_piece(const piece_state *const piece) {
 void render_board() {
   for (int8_t y = 0; y < FIELD_HEIGHT; y++) {
     for (int8_t x = 0; x < FIELD_WIDTH; x++) {
-        draw_cell(generic_screenbuffer, x, y, playfield[y][x]);
+      draw_cell(generic_screenbuffer, x, y, playfield[y][x]);
     }
   }
 }

@@ -16,7 +16,7 @@
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
-static uint8_t *sdl_keys = NULL;
+static const uint8_t *sdl_keys = NULL;
 
 int generic_init() {
 
